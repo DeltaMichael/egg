@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "util.h"
+#include "hmap.h"
 
 DIR* open_dir(char* current_dir) {
 	int descr = open(current_dir, O_DIRECTORY);

@@ -2,12 +2,13 @@
 #include "util.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 HMAP* hmap_init() {
 	HMAP *out = malloc(sizeof(HMAP));
 	out->inserted = 0;
 	out->size = 1000;
-	out->entries = calloc(out->size, sizeof(ENTRY));
+	out->entries = calloc(out->size, sizeof(ENTRY*));
 	return out;
 }
 
@@ -28,12 +29,13 @@ void hmap_insert(HMAP* hmap, char* key, char* value) {
 		// TODO: resize and try again
 	} else {
 		hmap->entries[index] = entry_init(key, value);
+		hmap->inserted++;
 	}
 }
 
 void hmap_delete(HMAP* hmap, char* key) {
 	size_t index = hmap_get_index(hmap, key);
-	ENTRY* entry;
+	ENTRY* entry = hmap->entries[index];
 	while(index < hmap->size && !streq(entry->key, key)) {
 		entry = hmap->entries[index];
 		index++;
@@ -48,7 +50,7 @@ void hmap_delete(HMAP* hmap, char* key) {
 
 char* hmap_get(HMAP* hmap, char* key) {
 	size_t index = hmap_get_index(hmap, key);
-	ENTRY* entry;
+	ENTRY* entry = hmap->entries[index];
 	while(index < hmap->size && !streq(entry->key, key)) {
 		entry = hmap->entries[index];
 		index++;
@@ -65,7 +67,7 @@ bool hmap_contains(HMAP* hmap, char* key) {
 
 int hash(char* key) {
 	int out = 0;
-	while(key) {
+	while(*key) {
 		out += *key;
 		key++;
 	}
@@ -82,5 +84,14 @@ void hmap_resize(HMAP* hmap) {
 	// 2. Recompute hash keys
 	// 3. Copy values
 	// 4. Delete old array
+}
+
+
+void hmap_print(HMAP* hmap) {
+	for(int i = 0; i < hmap->size; i++) {
+		if(hmap->entries[i] != NULL) {
+			printf("%s:%s, ", hmap->entries[i]->key, hmap->entries[i]->value);
+		}
+	}
 }
 

@@ -24,6 +24,7 @@ bool hmap_contains(HMAP* hmap, char* key);
 int hash(char* key);
 size_t hmap_get_index(HMAP* hmap, char* key);
 void hmap_resize(HMAP* hmap);
+void hmap_print(HMAP* hmap);
 
 #endif
 
