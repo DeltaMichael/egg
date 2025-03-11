@@ -8,10 +8,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <errno.h>
-
-bool streq(char* str1, char* str2) {
-	return strcmp(str1, str2) == 0;
-}
+#include "util.h"
 
 DIR* open_dir(char* current_dir) {
 	int descr = open(current_dir, O_DIRECTORY);
