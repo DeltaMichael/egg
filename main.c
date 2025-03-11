@@ -85,7 +85,7 @@ int main(int argc, char **argv, char** envp) {
 	while (1) {
 		printf("(%s (EGG> ", current_dir);
     	if ((nread = getline(&line, &len, stdin)) != -1) {
-			if (streq(line, "exit\n")) {
+			if (streq(line, "exit\n") || streq(line, "eggzit\n")) {
 				break;
 			} else if (streq(line, "dir\n")) {
 				DIR* cd = open_dir(current_dir);
@@ -103,6 +103,8 @@ int main(int argc, char **argv, char** envp) {
 					printf("%s\n", *envp);
 					envp++;
 				}
+			} else if (streq(line, "cls\n")) {
+				system("clear");
 			} else {
             	fwrite(line, nread, 1, stdout);
 			}
