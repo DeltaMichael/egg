@@ -1,8 +1,12 @@
-egg: main.o
-	cc -lc -o egg main.o
+FLAGS = -lc -Wall -Wextra
+O_FILES = main.o
+
+egg: $(O_FILES)
+	cc $(FLAGS) -o egg main.o
 
 main.o: main.c
-	cc -lc -Wall -Wextra -c main.c
+	cc $(FLAGS) -c main.c
 
+.PHONY: clean
 clean:
-	rm main.o egg
+	rm $(O_FILES)
