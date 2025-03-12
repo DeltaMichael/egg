@@ -26,4 +26,4 @@ cls - clear screen
 - keep track of environment and related features, e.g. run executables on path, command prompt customization
 - fully-fledged scripting, i.e. run a script file with something like `egg ./myscript.gg`
 - tests, bloody tests
-- run in profiler and find all the memory leaks I missed
+- run profiler and find all the memory leaks I missed
