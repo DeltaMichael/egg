@@ -85,9 +85,10 @@ int main(int argc, char **argv, char** envp) {
 	while (1) {
 		printf("(%s (EGG> ", current_dir);
     	if ((nread = getline(&line, &len, stdin)) != -1) {
-			if (streq(line, "exit\n") || streq(line, "eggzit\n")) {
+			COMMAND cmd = parse_command(line);
+			if (streq(cmd.command, "exit") || streq(cmd.command, "eggzit\n")) {
 				break;
-			} else if (streq(line, "dir\n")) {
+			} else if (streq(cmd.command, "dir")) {
 				DIR* cd = open_dir(current_dir);
 				if (cd == NULL) {
 					continue;
@@ -98,12 +99,12 @@ int main(int argc, char **argv, char** envp) {
 					printf("\t%s\n", c_entry->d_name);
 					c_entry = readdir(cd);
 				}
-			} else if (streq(line, "env\n")) {
+			} else if (streq(cmd.command, "env")) {
 				while (*envp) {
 					printf("%s\n", *envp);
 					envp++;
 				}
-			} else if (streq(line, "cls\n")) {
+			} else if (streq(cmd.command, "cls")) {
 				system("clear");
 			} else {
             	fwrite(line, nread, 1, stdout);
