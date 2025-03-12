@@ -42,6 +42,38 @@ DIR* open_dir(char* current_dir) {
 	return cd;
 }
 
+void change_dir(char* new_dir) {
+	if (-1 == chdir(new_dir)) {
+		switch(errno) {
+			case EACCES: // Search permission is denied for one of the components of path.  (See also path_resolution(7).)
+				printf("Search permission is denied for one of the components of %s", new_dir);
+				break;
+			case EFAULT: // path points outside your accessible address space.
+				printf("%s points outside your accessible address space", new_dir);
+				break;
+			case EIO: //    An I/O error occurred.
+				printf("An I/O error occured");
+				break;
+			case ELOOP: //  Too many symbolic links were encountered in resolving path.
+				printf("Too many symbolic links were encountered in resolving %s", new_dir);
+				break;
+			case ENAMETOOLONG: // path is too long.
+				printf("Directory path is too long");
+				break;
+			case ENOENT: // The directory specified in path does not exist.
+				printf("%s does not exist", new_dir);
+				break;
+			case ENOMEM: // Insufficient kernel memory was available.
+				printf("Insufficient kernel memory was available");
+				break;
+			case ENOTDIR: // A component of path is not a directory.
+				printf("A component of %s is not a directory", new_dir);
+				break;
+		}
+	}
+
+}
+
 const char* get_file_type(struct dirent *c_entry) {
 	switch (c_entry->d_type) {
 		case DT_BLK: //      This is a block device.
@@ -81,7 +113,6 @@ char* get_current_dir() {
 }
 
 int main(int argc, char **argv, char** envp) {
-	int current_dir_length = 128;
 	char* current_dir = get_current_dir();
     char *line = NULL;
     size_t len = 0;
@@ -111,8 +142,7 @@ int main(int argc, char **argv, char** envp) {
 					envp++;
 				}
 			} else if (streq(cmd.command, "cd")) {
-				// TODO: Error handling
-				chdir(cmd.args);
+				change_dir(cmd.args);
 				free(current_dir);
 				current_dir = get_current_dir();
 			} else if (streq(cmd.command, "cls")) {
@@ -121,8 +151,8 @@ int main(int argc, char **argv, char** envp) {
             	fwrite(line, nread, 1, stdout);
 			}
 		}
+		free_command(cmd);
 	}
-	free(current_dir);
 	return 0;
 }
 

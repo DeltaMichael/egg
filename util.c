@@ -25,7 +25,13 @@ COMMAND parse_command(char* input) {
 }
 
 void free_command(COMMAND cmd) {
-	free(cmd.command);
-	free(cmd.args);
+	if(cmd.command != NULL) {
+		free(cmd.command);
+		cmd.command = NULL;
+	}
+	if(cmd.args != NULL) {
+		free(cmd.args);
+		cmd.args = NULL;
+	}
 }
 
