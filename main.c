@@ -65,7 +65,7 @@ const char* get_file_type(struct dirent *c_entry) {
 	}
 }
 
-int main(int argc, char **argv, char** envp) {
+char* get_current_dir() {
 	int current_dir_length = 128;
 	char* current_dir = calloc(current_dir_length, sizeof(uint8_t));
 	while (getcwd(current_dir, current_dir_length) == NULL) {
@@ -77,6 +77,12 @@ int main(int argc, char **argv, char** envp) {
 			exit(1);
 		}
 	}
+	return current_dir;
+}
+
+int main(int argc, char **argv, char** envp) {
+	int current_dir_length = 128;
+	char* current_dir = get_current_dir();
     char *line = NULL;
     size_t len = 0;
     ssize_t nread;
@@ -104,6 +110,11 @@ int main(int argc, char **argv, char** envp) {
 					printf("%s\n", *envp);
 					envp++;
 				}
+			} else if (streq(cmd.command, "cd")) {
+				// TODO: Error handling
+				chdir(cmd.args);
+				free(current_dir);
+				current_dir = get_current_dir();
 			} else if (streq(cmd.command, "cls")) {
 				system("clear");
 			} else {

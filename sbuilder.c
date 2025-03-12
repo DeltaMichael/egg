@@ -12,8 +12,7 @@ SBUILDER* sb_init() {
 
 void sb_append(SBUILDER* builder, char* input) {
 	while(*input != 0) {
-		// sb_append_char(builder, *input);
-		printf("%c", *input);
+		sb_append_char(builder, *input);
 		input++;
 	}
 }

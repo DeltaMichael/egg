@@ -15,7 +15,10 @@ COMMAND parse_command(char* input) {
 	}
 	cmd.command = sb_get_string(builder);
 	input++;
-	sb_append(builder, input);
+	while(*input && *input != '\n' && *input != '\r') {
+		sb_append_char(builder, *input);
+		input++;
+	}
 	cmd.args = sb_get_string(builder);
 	sb_free(builder);
 	return cmd;
