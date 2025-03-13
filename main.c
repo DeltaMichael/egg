@@ -10,6 +10,75 @@
 #include <errno.h>
 #include "util.h"
 #include "hmap.h"
+#include "sbuilder.h"
+
+static char* exec_filter = NULL;
+
+char* get_current_dir() {
+	int current_dir_length = 128;
+	char* current_dir = calloc(current_dir_length, sizeof(uint8_t));
+	while (getcwd(current_dir, current_dir_length) == NULL) {
+		if (errno == ERANGE) {
+			current_dir_length *= 2;
+			realloc(current_dir, current_dir_length);
+		} else {
+			printf("Egg exited errno %d", errno);
+			exit(1);
+		}
+	}
+	return current_dir;
+}
+
+int filter_executable(const struct dirent* d) {
+	return 0 == strcmp(exec_filter, d->d_name);
+}
+
+char* find_executable(char* name) {
+    struct dirent **namelist;
+    int n;
+	exec_filter = name;
+    n = scandir("/usr/bin", &namelist, filter_executable, alphasort);
+    if (n == 0) {
+        printf("%s: No such command\n", name);
+		return "";
+    } else if (n == -1) {
+		// TODO: error handling
+        printf("TODO: error handling\n");
+		return "";
+	}
+	SBUILDER* builder = sb_init();
+	sb_append(builder, "/usr/bin/");
+	sb_append(builder, name);
+	char* out = sb_get_string(builder);
+	sb_free(builder);
+
+	// Free the names
+    while (n--) {
+        free(namelist[n]);
+    }
+    free(namelist);
+	return out;
+}
+
+void execute_bin(char* name) {
+	char* executable = find_executable(name);
+	if(streq("", executable)) {
+		return;
+	}
+    pid_t pid = fork();
+    switch (pid) {
+    	case -1:
+    	    printf("Could not start %s\n", name);
+			break;
+    	case 0:
+			execv(executable, NULL);
+			exit(EXIT_SUCCESS);
+		default:
+			int status;
+    		waitpid(pid, &status, 0);
+			break;
+	}
+}
 
 DIR* open_dir(char* current_dir) {
 	int descr = open(current_dir, O_DIRECTORY);
@@ -97,20 +166,7 @@ const char* get_file_type(struct dirent *c_entry) {
 	}
 }
 
-char* get_current_dir() {
-	int current_dir_length = 128;
-	char* current_dir = calloc(current_dir_length, sizeof(uint8_t));
-	while (getcwd(current_dir, current_dir_length) == NULL) {
-		if (errno == ERANGE) {
-			current_dir_length *= 2;
-			realloc(current_dir, current_dir_length);
-		} else {
-			printf("Egg exited errno %d", errno);
-			exit(1);
-		}
-	}
-	return current_dir;
-}
+
 
 int main(int argc, char **argv, char** envp) {
 	char* current_dir = get_current_dir();
@@ -121,8 +177,9 @@ int main(int argc, char **argv, char** envp) {
 	system("clear");
 	while (1) {
 		printf("(%s (EGG> ", current_dir);
+		COMMAND cmd;
     	if ((nread = getline(&line, &len, stdin)) != -1) {
-			COMMAND cmd = parse_command(line);
+			cmd = parse_command(line);
 			if (streq(cmd.command, "exit") || streq(cmd.command, "eggzit\n")) {
 				break;
 			} else if (streq(cmd.command, "dir")) {
@@ -148,7 +205,8 @@ int main(int argc, char **argv, char** envp) {
 			} else if (streq(cmd.command, "cls")) {
 				system("clear");
 			} else {
-            	fwrite(line, nread, 1, stdout);
+				execute_bin(cmd.command);
+            	// fwrite(line, nread, 1, stdout);
 			}
 		}
 		free_command(cmd);

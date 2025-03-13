@@ -21,6 +21,10 @@ cls - clear screen
 ```
 ## Unimplemented features
 
+- more built-in commands, e.g. rm, mkdir
+- flag parsing
+- history
+- colors
 - run executables
 - pipes
 - keep track of environment and related features, e.g. run executables on path, command prompt customization
