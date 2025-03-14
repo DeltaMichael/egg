@@ -20,7 +20,7 @@ char* get_current_dir() {
 	while (getcwd(current_dir, current_dir_length) == NULL) {
 		if (errno == ERANGE) {
 			current_dir_length *= 2;
-			realloc(current_dir, current_dir_length);
+			current_dir = realloc(current_dir, current_dir_length);
 		} else {
 			printf("Egg exited errno %d", errno);
 			exit(1);
@@ -60,7 +60,7 @@ char* find_executable(char* name) {
 	return out;
 }
 
-void execute_bin(char* name) {
+void execute_bin(char* name, char** args) {
 	char* executable = find_executable(name);
 	if(streq("", executable)) {
 		return;
@@ -71,7 +71,7 @@ void execute_bin(char* name) {
     	    printf("Could not start %s\n", name);
 			break;
     	case 0:
-			execv(executable, NULL);
+			execv(executable, args);
 			exit(EXIT_SUCCESS);
 		default:
 			int status;
@@ -199,18 +199,19 @@ int main(int argc, char **argv, char** envp) {
 					envp++;
 				}
 			} else if (streq(cmd.command, "cd")) {
-				change_dir(cmd.args);
+				change_dir(cmd.args[0]);
 				free(current_dir);
 				current_dir = get_current_dir();
 			} else if (streq(cmd.command, "cls")) {
 				system("clear");
 			} else {
-				execute_bin(cmd.command);
+				execute_bin(cmd.command, cmd.args);
             	// fwrite(line, nread, 1, stdout);
 			}
 		}
-		free_command(cmd);
+		// free_command(cmd);
 	}
+	free(current_dir);
 	return 0;
 }
 

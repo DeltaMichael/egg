@@ -6,11 +6,12 @@
 
 typedef struct {
 	char* command;
-	char* args;
+	char** args;
 } COMMAND;
 
 bool streq(char* str1, char* str2);
 COMMAND parse_command(char* input);
+char** parse_command_args(char* command, char* input);
 void free_command(COMMAND cmd);
 
 #endif

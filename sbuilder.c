@@ -41,12 +41,12 @@ void sb_reset(SBUILDER* builder) {
 
 void sb_double_size(SBUILDER* builder) {
 	builder->size *= 2;
-	realloc(builder->characters, builder->size);
+	builder->characters = realloc(builder->characters, builder->size);
 }
 
 void sb_shrink_to_size(SBUILDER* builder) {
 	builder->size = builder->pointer + 1;
-	realloc(builder->characters, builder->size);
+	builder->characters = realloc(builder->characters, builder->size);
 }
 
 void sb_free(SBUILDER* builder) {
