@@ -21,12 +21,13 @@ cls - clear screen
 ```
 ## Unimplemented features
 
-- more built-in commands, e.g. rm, mkdir
-- flag parsing
-- history
-- colors
 - run executables
 - pipes
+- more built-in commands, e.g. rm, mkdir
+- flag parsing for built-in commands
+- history
+- colors
+- text buffer, e.g. go back and forth when typing, insert text in the middle
 - keep track of environment and related features, e.g. run executables on path, command prompt customization
 - fully-fledged scripting, i.e. run a script file with something like `egg ./myscript.gg`
 - tests, bloody tests
