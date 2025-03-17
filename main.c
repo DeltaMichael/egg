@@ -60,6 +60,50 @@ char* find_executable(char* name) {
 	return out;
 }
 
+char* get_file_type(struct dirent *c_entry) {
+	switch (c_entry->d_type) {
+		case DT_BLK: //      This is a block device.
+			return "<BLK>";
+		case DT_CHR: //      This is a character device.
+			return "<CHR>";
+		case DT_DIR: //      This is a directory.
+			return "<DIR>";
+		case DT_FIFO: //     This is a named pipe (FIFO).
+			return "<FIFO>";
+		case DT_LNK: //      This is a symbolic link.
+			return "LINK>";
+		case DT_REG: //      This is a regular file.
+			return "<FILE>";
+		case DT_SOCK: //     This is a UNIX domain socket.
+			return "<SOCK>";
+		case DT_UNKNOWN: //  The file type could not be determined.
+			return "<N/A>";
+		default:
+			return "<N/A>";
+	}
+}
+
+void list_dir_contents(char* path) {
+    struct dirent **namelist;
+    int n = scandir(path, &namelist, NULL, alphasort);
+    if (n == 0) {
+		printf("\n");
+		return;
+    } else if (n == -1) {
+		// TODO: error handling
+        printf("TODO: error handling\n");
+		return;
+	}
+
+    while (n--) {
+		struct dirent *c_entry = namelist[n];
+		printf("%s", get_file_type(c_entry));
+		printf("\t%s\n", c_entry->d_name);
+        free(c_entry);
+    }
+    free(namelist);
+}
+
 void execute_bin(char* name, char** args) {
 	char* executable = find_executable(name);
 	if(streq("", executable)) {
@@ -143,30 +187,6 @@ void change_dir(char* new_dir) {
 
 }
 
-const char* get_file_type(struct dirent *c_entry) {
-	switch (c_entry->d_type) {
-		case DT_BLK: //      This is a block device.
-			return "<BLK>";
-		case DT_CHR: //      This is a character device.
-			return "<CHR>";
-		case DT_DIR: //      This is a directory.
-			return "<DIR>";
-		case DT_FIFO: //     This is a named pipe (FIFO).
-			return "<FIFO>";
-		case DT_LNK: //      This is a symbolic link.
-			return "LINK>";
-		case DT_REG: //      This is a regular file.
-			return "<FILE>";
-		case DT_SOCK: //     This is a UNIX domain socket.
-			return "<SOCK>";
-		case DT_UNKNOWN: //  The file type could not be determined.
-			return "<N/A>";
-		default:
-			return "<N/A>";
-	}
-}
-
-
 
 int main(int argc, char **argv, char** envp) {
 	char* current_dir = get_current_dir();
@@ -183,15 +203,10 @@ int main(int argc, char **argv, char** envp) {
 			if (streq(cmd.command, "exit") || streq(cmd.command, "eggzit\n")) {
 				break;
 			} else if (streq(cmd.command, "dir")) {
-				DIR* cd = open_dir(current_dir);
-				if (cd == NULL) {
-					continue;
-				}
-				struct dirent* c_entry = readdir(cd);
-				while (c_entry != NULL) {
-					printf("%s", get_file_type(c_entry));
-					printf("\t%s\n", c_entry->d_name);
-					c_entry = readdir(cd);
+				if(cmd.args[1]) {
+					list_dir_contents(cmd.args[1]);
+				} else {
+					list_dir_contents(current_dir);
 				}
 			} else if (streq(cmd.command, "env")) {
 				while (*envp) {
@@ -199,18 +214,13 @@ int main(int argc, char **argv, char** envp) {
 					envp++;
 				}
 			} else if (streq(cmd.command, "cd")) {
-				change_dir(cmd.args[0]);
+				change_dir(cmd.args[1]);
 				free(current_dir);
 				current_dir = get_current_dir();
 			} else if (streq(cmd.command, "cls")) {
 				system("clear");
 			} else {
-				// while(*cmd.args) {
-				// 	printf("%s\n", *cmd.args);
-				// 	cmd.args++;
-				// }
 				execute_bin(cmd.command, cmd.args);
-            	// fwrite(line, nread, 1, stdout);
 			}
 		}
 		// free_command(cmd);
