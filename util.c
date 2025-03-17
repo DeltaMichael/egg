@@ -36,9 +36,20 @@ char** parse_command_args(char* command, char* input) {
 		while(*input && (*input == ' ' || *input == '\n' || *input == '\r')) {
 			input++;
 		}
-		while(*input && (*input != ' ' && *input != '\n' && *input != '\r')) {
+		if(*input == '"') {
 			sb_append_char(builder, *input);
 			input++;
+			while(*input && *input != '"') {
+				sb_append_char(builder, *input);
+				input++;
+			}
+			sb_append_char(builder, *input);
+			input++;
+		} else {
+			while(*input && (*input != ' ' && *input != '\n' && *input != '\r')) {
+				sb_append_char(builder, *input);
+				input++;
+			}
 		}
 		arglist_append(arglist, sb_get_string(builder));
 	}

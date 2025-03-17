@@ -205,6 +205,10 @@ int main(int argc, char **argv, char** envp) {
 			} else if (streq(cmd.command, "cls")) {
 				system("clear");
 			} else {
+				// while(*cmd.args) {
+				// 	printf("%s\n", *cmd.args);
+				// 	cmd.args++;
+				// }
 				execute_bin(cmd.command, cmd.args);
             	// fwrite(line, nread, 1, stdout);
 			}
