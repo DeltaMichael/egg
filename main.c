@@ -95,8 +95,8 @@ void list_dir_contents(char* path) {
 		return;
 	}
 
-    while (n--) {
-		struct dirent *c_entry = namelist[n];
+    for (int i = 0; i < n; i++) {
+		struct dirent *c_entry = namelist[i];
 		printf("%s", get_file_type(c_entry));
 		printf("\t%s\n", c_entry->d_name);
         free(c_entry);
