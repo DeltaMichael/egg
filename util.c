@@ -28,6 +28,45 @@ COMMAND parse_command(char* input) {
 	return cmd;
 }
 
+char* parse_command_pipe(char* input, COMMAND* commands) {
+	COMMAND cmd;
+	SBUILDER* builder = sb_init();
+
+	// get the command
+	while(*input && *input != ' ' && *input != '\n' && *input != '\r') {
+		sb_append_char(builder, *input);
+		input++;
+	}
+	cmd.command = sb_get_string(builder);
+	input++;
+
+	// get the args
+	while(*input && *input != '\n' && *input != '\r' && *input != '|') {
+		sb_append_char(builder, *input);
+		input++;
+	}
+	char* raw_args = sb_get_string(builder);
+	cmd.args = parse_command_args(cmd.command, raw_args);
+	sb_free(builder);
+	free(raw_args);
+	*commands = cmd;
+
+	if(*input == '|') {
+		input++;
+		return input;
+	}
+	return NULL;
+}
+
+void parse_commands(char* input, COMMAND* commands) {
+	char* raw_input = input;
+	COMMAND* local_cmd = commands;
+	while(raw_input != NULL) {
+		raw_input = parse_command_pipe(raw_input, local_cmd);
+		local_cmd += 1;
+	}
+}
+
 char** parse_command_args(char* command, char* input) {
 	SBUILDER* builder = sb_init();
 	ARGLIST* arglist = arglist_init();

@@ -124,6 +124,53 @@ void execute_bin(char* name, char** args) {
 	}
 }
 
+void execute_bin_io(char* name, char** args, FILE* in, FILE* out) {
+	char* executable = find_executable(name);
+	if(streq("", executable)) {
+		return;
+	}
+    pid_t pid = fork();
+    switch (pid) {
+    	case -1:
+    	    printf("Could not start %s\n", name);
+			break;
+    	case 0:
+			// redirect stdin to in
+			if(in) {
+				dup2(in, STDIN_FILENO);
+			}
+			// redirect stdout and stderr to out
+			if(out) {
+				dup2(out, STDOUT_FILENO);
+				dup2(out, STDERR_FILENO);
+			}
+			execv(executable, args);
+			exit(EXIT_SUCCESS);
+		default:
+			int status;
+    		waitpid(pid, &status, 0);
+			break;
+	}
+}
+
+void pipe_commands(COMMAND* commands, int size) {
+	int fds[size + 1];
+	for(int i = 0; i < size; i++) {
+		pipe(fds[i]);
+	}
+	pclose(fds[0]);
+	fds[0] = NULL;
+	fds[size] = NULL;
+
+	for(int i = 0; i < size; i++) {
+		execute_bin_io(commands[i].command, commands[i].args, fds[i], fds[i + 1]);
+	}
+
+	for(int i = 1; i < size; i++) {
+		pclose(fds[i]);
+	}
+}
+
 DIR* open_dir(char* current_dir) {
 	int descr = open(current_dir, O_DIRECTORY);
 	DIR* cd = fdopendir(descr);
@@ -197,9 +244,10 @@ int main(int argc, char **argv, char** envp) {
 	system("clear");
 	while (1) {
 		printf("(%s (EGG> ", current_dir);
-		COMMAND cmd;
+		COMMAND commands[128] = {};
     	if ((nread = getline(&line, &len, stdin)) != -1) {
-			cmd = parse_command(line);
+			parse_commands(line, commands);
+			COMMAND cmd = commands[0];
 			if (streq(cmd.command, "exit") || streq(cmd.command, "eggzit\n")) {
 				break;
 			} else if (streq(cmd.command, "dir")) {
@@ -223,7 +271,9 @@ int main(int argc, char **argv, char** envp) {
 				execute_bin(cmd.command, cmd.args);
 			}
 		}
-		// free_command(cmd);
+		for(int i = 0; i < 128; i++) {
+			// free_command(commands[i]);
+		}
 	}
 	free(current_dir);
 	return 0;
