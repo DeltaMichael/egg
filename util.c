@@ -37,13 +37,11 @@ char** parse_command_args(char* command, char* input) {
 			input++;
 		}
 		if(*input == '"') {
-			sb_append_char(builder, *input);
 			input++;
 			while(*input && *input != '"') {
 				sb_append_char(builder, *input);
 				input++;
 			}
-			sb_append_char(builder, *input);
 			input++;
 		} else {
 			while(*input && (*input != ' ' && *input != '\n' && *input != '\r')) {
