@@ -120,6 +120,7 @@ void execute_bin(char* name, char** args) {
 		default:
 			int status;
     		waitpid(pid, &status, 0);
+			free(executable);
 			break;
 	}
 }
@@ -242,40 +243,52 @@ int main(int argc, char **argv, char** envp) {
     ssize_t nread;
 
 	system("clear");
+	COMMAND** commands = calloc(128, sizeof(COMMAND*));
+	COMMAND** temp;
 	while (1) {
 		printf("(%s (EGG> ", current_dir);
-		COMMAND commands[128] = {};
     	if ((nread = getline(&line, &len, stdin)) != -1) {
 			parse_commands(line, commands);
-			COMMAND cmd = commands[0];
-			if (streq(cmd.command, "exit") || streq(cmd.command, "eggzit\n")) {
+			COMMAND* cmd = commands[0];
+			if (streq(cmd->command, "exit") || streq(cmd->command, "eggzit\n")) {
 				break;
-			} else if (streq(cmd.command, "dir")) {
-				if(cmd.args[1]) {
-					list_dir_contents(cmd.args[1]);
+			} else if (streq(cmd->command, "dir")) {
+				if(cmd->args[1]) {
+					list_dir_contents(cmd->args[1]);
 				} else {
 					list_dir_contents(current_dir);
 				}
-			} else if (streq(cmd.command, "env")) {
+			} else if (streq(cmd->command, "env")) {
 				while (*envp) {
 					printf("%s\n", *envp);
 					envp++;
 				}
-			} else if (streq(cmd.command, "cd")) {
-				change_dir(cmd.args[1]);
+			} else if (streq(cmd->command, "cd")) {
+				change_dir(cmd->args[1]);
 				free(current_dir);
 				current_dir = get_current_dir();
-			} else if (streq(cmd.command, "cls")) {
+			} else if (streq(cmd->command, "cls")) {
 				system("clear");
 			} else {
-				execute_bin(cmd.command, cmd.args);
+				execute_bin(cmd->command, cmd->args);
 			}
 		}
-		for(int i = 0; i < 128; i++) {
-			// free_command(commands[i]);
-		}
+		temp = commands;
+        while(*temp != NULL) {
+            free_command(*temp);
+            *temp = NULL;
+            temp++;
+        }
 	}
 	free(current_dir);
+	free(line);
+	temp = commands;
+    while(*temp != NULL) {
+        free_command(*temp);
+        *temp = NULL;
+        temp++;
+    }
+	free(commands);
 	return 0;
 }
 

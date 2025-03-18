@@ -1,12 +1,13 @@
 #include "sbuilder.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 SBUILDER* sb_init() {
 	SBUILDER* builder = malloc(sizeof(SBUILDER));
 	builder->pointer = 0;
 	builder->size = 128;
-	builder->characters = malloc(sizeof(char) * builder->size);
+	builder->characters = calloc(sizeof(char), builder->size);
 	return builder;
 }
 
@@ -26,26 +27,13 @@ void sb_append_char(SBUILDER* builder, char input) {
 }
 
 char* sb_get_string(SBUILDER* builder) {
-	sb_append_char(builder, 0);
-	sb_shrink_to_size(builder);
-	char* out = builder->characters;
-	sb_reset(builder);
-	return out;
-}
-
-void sb_reset(SBUILDER* builder) {
+	char* out = strndup(builder->characters, builder->pointer);
 	builder->pointer = 0;
-	builder->size = 128;
-	builder->characters = malloc(builder->size);
+	return out;
 }
 
 void sb_double_size(SBUILDER* builder) {
 	builder->size *= 2;
-	builder->characters = realloc(builder->characters, builder->size);
-}
-
-void sb_shrink_to_size(SBUILDER* builder) {
-	builder->size = builder->pointer + 1;
 	builder->characters = realloc(builder->characters, builder->size);
 }
 

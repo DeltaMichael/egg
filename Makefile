@@ -1,4 +1,4 @@
-FLAGS = -lc -Wall -Wextra
+FLAGS = -g -lc -Wall -Wextra
 O_FILES = main.o hmap.o util.o sbuilder.o arglist.o
 
 egg: $(O_FILES)
