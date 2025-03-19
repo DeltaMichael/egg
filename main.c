@@ -175,13 +175,6 @@ void pipe_commands(COMMAND** commands, int size) {
 			for(int j = 0; j < 2 * (size - 1); j++) {
 				close(fds[j]);
 			}
-			printf("COMMAND: %s ARGS: ", commands[i]->command);
-			char** temp = commands[i]->args;
-			while(*temp != NULL) {
-				printf("%s, ", *temp);
-				temp++;
-			}
-			printf("\n");
 			execv(executable, commands[i]->args);
 			exit(EXIT_SUCCESS);
 		}
@@ -279,7 +272,7 @@ int main(int argc, char **argv, char** envp) {
 			if (streq(cmd->command, "exit") || streq(cmd->command, "eggzit\n")) {
 				break;
 			} else if (streq(cmd->command, "dir")) {
-				if(cmd->args[1]) {
+				if(cmd->args && cmd->args[1]) {
 					list_dir_contents(cmd->args[1]);
 				} else {
 					list_dir_contents(current_dir);

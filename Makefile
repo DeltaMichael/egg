@@ -1,4 +1,4 @@
-FLAGS = -g -lc -Wall -Wextra
+FLAGS = -g -lc -Wall -Wextra # -fsanitize=address
 O_FILES = main.o hmap.o util.o sbuilder.o arglist.o
 
 egg: $(O_FILES)

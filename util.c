@@ -83,6 +83,9 @@ char** parse_command_args(char* command, char* input) {
 	SBUILDER* builder = sb_init();
 	ARGLIST* arglist = arglist_init();
 	arglist_append(arglist, command);
+	if(input == NULL) {
+		return NULL;
+	}
 	while(*input) {
 		while(*input && (*input == ' ' || *input == '\n' || *input == '\r')) {
 			input++;
