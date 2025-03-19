@@ -27,6 +27,9 @@ void sb_append_char(SBUILDER* builder, char input) {
 }
 
 char* sb_get_string(SBUILDER* builder) {
+	if(builder->pointer == 0) {
+		return NULL;
+	}
 	char* out = strndup(builder->characters, builder->pointer);
 	builder->pointer = 0;
 	return out;

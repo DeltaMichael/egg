@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -125,50 +126,75 @@ void execute_bin(char* name, char** args) {
 	}
 }
 
-void execute_bin_io(char* name, char** args, FILE* in, FILE* out) {
-	char* executable = find_executable(name);
-	if(streq("", executable)) {
-		return;
+void pipe_commands(COMMAND** commands, int size) {
+	int fds[2 * (size - 1)];
+	for(int i = 0; i < size - 1; i++) {
+		if (-1 == pipe(fds + 2 * i)) {
+			switch(errno) {
+				case EFAULT:
+					printf("pipefd is not valid.");
+					break;
+				case EMFILE:
+					printf("The per-process limit on the number of open file descriptors has been reached.");
+					break;
+				case ENFILE:
+					printf("The system-wide limit on the total number of open files has been reached or the user hard limit on memory that can be allocated for pipes has been reached and the caller is not privileged; see pipe(7).");
+					break;
+				default:
+					printf("Error occurred when calling pipe()");
+					break;
+			}
+		}
+
 	}
-    pid_t pid = fork();
-    switch (pid) {
-    	case -1:
-    	    printf("Could not start %s\n", name);
-			break;
-    	case 0:
-			// redirect stdin to in
-			if(in) {
-				dup2(in, STDIN_FILENO);
+
+	for(int i = 0; i < size; i++) {
+
+		char* executable = find_executable(commands[i]->command);
+		if(streq("", executable)) {
+			continue;
+		}
+		// start the child process
+    	pid_t pid = fork();
+		if(0 == pid) {
+			// if it's not the first command
+			if(i > 0) {
+				// child reads from the prev pipe read end
+				dup2(fds[2*(i - 1)], STDIN_FILENO);
 			}
-			// redirect stdout and stderr to out
-			if(out) {
-				dup2(out, STDOUT_FILENO);
-				dup2(out, STDERR_FILENO);
+
+			// if it's not the last command
+			if(i < size - 1) {
+				// child writes to the current pipe write end
+				dup2(fds[2*i + 1], STDOUT_FILENO);
 			}
-			execv(executable, args);
+
+			// close the pipe fds in the child
+			// not closing these could lead to blocking,
+			// the kernel will wait for reads, even though they've been redirected
+			for(int j = 0; j < 2 * (size - 1); j++) {
+				close(fds[j]);
+			}
+			printf("COMMAND: %s ARGS: ", commands[i]->command);
+			char** temp = commands[i]->args;
+			while(*temp != NULL) {
+				printf("%s, ", *temp);
+				temp++;
+			}
+			printf("\n");
+			execv(executable, commands[i]->args);
 			exit(EXIT_SUCCESS);
-		default:
-			int status;
-    		waitpid(pid, &status, 0);
-			break;
+		}
 	}
-}
 
-void pipe_commands(COMMAND* commands, int size) {
-	int fds[size + 1];
+	// close descriptors in the parent
+	for(int j = 0; j < 2 * (size - 1); j++) {
+		close(fds[j]);
+	}
+
+	// wait for changes in any of the children
 	for(int i = 0; i < size; i++) {
-		pipe(fds[i]);
-	}
-	pclose(fds[0]);
-	fds[0] = NULL;
-	fds[size] = NULL;
-
-	for(int i = 0; i < size; i++) {
-		execute_bin_io(commands[i].command, commands[i].args, fds[i], fds[i + 1]);
-	}
-
-	for(int i = 1; i < size; i++) {
-		pclose(fds[i]);
+		wait(NULL);
 	}
 }
 
@@ -248,7 +274,7 @@ int main(int argc, char **argv, char** envp) {
 	while (1) {
 		printf("(%s (EGG> ", current_dir);
     	if ((nread = getline(&line, &len, stdin)) != -1) {
-			parse_commands(line, commands);
+			int total_commands = parse_commands(line, commands);
 			COMMAND* cmd = commands[0];
 			if (streq(cmd->command, "exit") || streq(cmd->command, "eggzit\n")) {
 				break;
@@ -270,7 +296,8 @@ int main(int argc, char **argv, char** envp) {
 			} else if (streq(cmd->command, "cls")) {
 				system("clear");
 			} else {
-				execute_bin(cmd->command, cmd->args);
+				// execute_bin(cmd->command, cmd->args);
+				pipe_commands(commands, total_commands);
 			}
 		}
 		temp = commands;

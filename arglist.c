@@ -12,6 +12,9 @@ ARGLIST* arglist_init() {
 }
 
 void arglist_append(ARGLIST* list, char* argument) {
+	if(argument == NULL) {
+		return;
+	}
 	if (list->pointer >= list->size) {
 		// resize
 		list->size *= 2;

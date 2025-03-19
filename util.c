@@ -66,14 +66,17 @@ char* parse_command_pipe(char* input, COMMAND** commands) {
 	return NULL;
 }
 
-void parse_commands(char* input, COMMAND** commands) {
+int parse_commands(char* input, COMMAND** commands) {
 	char* raw_input = input;
 	COMMAND** local_cmd = commands;
+	int count = 0;
 	while(raw_input != NULL) {
 		raw_input = parse_command_pipe(raw_input, local_cmd);
 		local_cmd++;
+		count++;
 	}
 	*local_cmd = NULL;
+	return count;
 }
 
 char** parse_command_args(char* command, char* input) {
