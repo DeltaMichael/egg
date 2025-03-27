@@ -3,36 +3,54 @@
     #include <string.h>
     #include <stdlib.h>
 	#include "interpreter.h"
+	#include "util.h"
 %}
 
 %union {
     char* str;
     int d;
+	CMD* cmd;
+	CMD** cmds;
 }
 
 %token <str> WORD
 %token PIPE
 %token EOL
 
-%type <str> command sequence
+%type <cmd> command
+%type <cmds> sequence
 
 %%
 
 seqlist:
        | seqlist sequence EOL {
-	   							printf("%s\n", $2);
+	   							CMD** seq = $2;
+								while(*seq != NULL) {
+									char** args = cmd_get(*seq);
+									while(*args != NULL) {
+										printf("%s ", *args);
+										args++;
+									}
+									printf("\n");
+									seq++;
+								}
 	   							char* current_dir = get_current_dir();
 								printf("(%s (EGG> ", current_dir);
-								free($2);
 							  }
        ;
 
-sequence: sequence PIPE command { strcat($1, " PIPE "); strcat($1, $3); $$ = $1; free($3); }
-        | command { $$ = $1; }
+sequence: sequence PIPE command { CMD** pointer = $1;
+								  while(*pointer != NULL) {
+									pointer++;
+								  }
+								  *pointer = $3;
+								  $$ = $1;
+								}
+        | command { CMD** out = calloc(256, sizeof(CMD*)); out[0] = $1; $$ = out; }
         ;
 
-command: command WORD { $$ = strcat($1, $2); free($2); }
-       | WORD { char* out = calloc(256, sizeof(char)); strcat(out, $1); $$ = out; free($1); }
+command: command WORD { cmd_append($1, $2); $$ = $1; free($2); }
+       | WORD { CMD* out = cmd_init(); cmd_append(out, $1); $$ = out; free($1); }
        ;
 
 %%

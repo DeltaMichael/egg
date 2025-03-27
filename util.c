@@ -4,6 +4,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
+CMD* cmd_init() {
+	CMD* out = malloc(sizeof(CMD));
+	out->args = arglist_init();
+	return out;
+}
+
+void cmd_append(CMD* cmd, char* arg) {
+	arglist_append(cmd->args, arg);
+}
+
+char** cmd_get(CMD* cmd) {
+	return arglist_get_args(cmd->args);
+}
+
+
 bool streq(char* str1, char* str2) {
 	return strcmp(str1, str2) == 0;
 }
