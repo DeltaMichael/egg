@@ -42,7 +42,7 @@ sequence: sequence PIPE command { CMD** pointer = $1;
         ;
 
 command: command WORD { cmd_append($1, $2); $$ = $1; free($2); }
-       | WORD { CMD* out = cmd_init(); cmd_append(out, $1); $$ = out; free($1); }
+       | WORD { CMD* out = cmd_init($1); $$ = out; free($1); }
        ;
 
 %%

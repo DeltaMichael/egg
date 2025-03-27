@@ -61,79 +61,39 @@ char* find_executable(char* name) {
 	return out;
 }
 
-char* get_file_type(struct dirent *c_entry) {
-	switch (c_entry->d_type) {
-		case DT_BLK: //      This is a block device.
-			return "<BLK>";
-		case DT_CHR: //      This is a character device.
-			return "<CHR>";
-		case DT_DIR: //      This is a directory.
-			return "<DIR>";
-		case DT_FIFO: //     This is a named pipe (FIFO).
-			return "<FIFO>";
-		case DT_LNK: //      This is a symbolic link.
-			return "LINK>";
-		case DT_REG: //      This is a regular file.
-			return "<FILE>";
-		case DT_SOCK: //     This is a UNIX domain socket.
-			return "<SOCK>";
-		case DT_UNKNOWN: //  The file type could not be determined.
-			return "<N/A>";
-		default:
-			return "<N/A>";
-	}
-}
-
-void list_dir_contents(char* path) {
-    struct dirent **namelist;
-    int n = scandir(path, &namelist, NULL, alphasort);
-    if (n == 0) {
-		printf("\n");
-		return;
-    } else if (n == -1) {
-		// TODO: error handling
-        printf("TODO: error handling\n");
-		return;
-	}
-
-    for (int i = 0; i < n; i++) {
-		struct dirent *c_entry = namelist[i];
-		printf("%s", get_file_type(c_entry));
-		printf("\t%s\n", c_entry->d_name);
-        free(c_entry);
-    }
-    free(namelist);
-}
-
-void execute_bin(char* name, char** args) {
-	char* executable = find_executable(name);
-	if(streq("", executable)) {
-		return;
-	}
-    pid_t pid = fork();
-    switch (pid) {
-    	case -1:
-    	    printf("Could not start %s\n", name);
-			break;
-    	case 0:
-			execv(executable, args);
-			exit(EXIT_SUCCESS);
-		default:
-			int status;
-    		waitpid(pid, &status, 0);
-			free(executable);
-			break;
-	}
-}
-
 void pipe_commands(CMD** commands) {
 
 	// TODO: replace this with appropriate data structure
+	// determine the size, it's null-terminated
 	int size = 0;
 	CMD** cmd_pointer = commands;
 	while(*cmd_pointer != NULL) {
 		size++;
 		cmd_pointer++;
+	}
+
+	// check for built-ins
+	for(int i = 0; i < size; i++) {
+		// TODO: use hashmap here
+		if(streq(commands[i]->command, "cd") || streq(commands[i]->command, "exit")) {
+			if(size == 1) { // execute the built-in
+				if(streq(commands[i]->command, "cd")) {
+					char** args = cmd_get(commands[i]);
+					if(args[1]) {
+						change_dir(args[1]);
+					}
+					return;
+				}
+
+				if(streq(commands[i]->command, "exit")) {
+					exit(0);
+				}
+
+			} else {
+				// do nothing
+				return;
+			}
+		}
 	}
 
 	int fds[2 * (size - 1)];
@@ -200,37 +160,6 @@ void pipe_commands(CMD** commands) {
 	}
 }
 
-DIR* open_dir(char* current_dir) {
-	int descr = open(current_dir, O_DIRECTORY);
-	DIR* cd = fdopendir(descr);
-	if (cd == NULL) {
-		switch (errno) {
-			case EACCES: // Permission denied.
-    				printf("Permission denied");
-					break;
-			case EBADF:  // fd is not a valid file descriptor opened for reading.
-    				printf("%d for directory %s is not a valid file descriptor opened for reading", descr, current_dir);
-					break;
-			case EMFILE: // The per-process limit on the number of open file descriptors has been reached.
-    				printf("The per-process limit on the number of open file descriptors has been reached.");
-					break;
-			case ENFILE: // The system-wide limit on the total number of open files has been reached.
-    				printf("The system-wide limit on the total number of open files has been reached.");
-					break;
-			case ENOENT: // Directory does not exist, or name is an empty string.
-    				printf("Directory does not exist, or name is an empty string.");
-					break;
-			case ENOMEM: // Insufficient memory to complete the operation.
-    				printf("Insufficient memory to complete the operation.");
-					break;
-			case ENOTDIR:
-    				printf("%s is not a directory", current_dir);
-					break;
-		}
-	}
-	return cd;
-}
-
 void change_dir(char* new_dir) {
 	if (-1 == chdir(new_dir)) {
 		switch(errno) {
@@ -260,6 +189,5 @@ void change_dir(char* new_dir) {
 				break;
 		}
 	}
-
 }
 
