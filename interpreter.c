@@ -75,7 +75,7 @@ void pipe_commands(CMD** commands) {
 	// check for built-ins
 	for(int i = 0; i < size; i++) {
 		// TODO: use hashmap here
-		if(streq(commands[i]->command, "cd") || streq(commands[i]->command, "exit")) {
+		if(streq(commands[i]->command, "cd") || streq(commands[i]->command, "exit") || streq(commands[i]->command, "eggzit")) {
 			if(size == 1) { // execute the built-in
 				if(streq(commands[i]->command, "cd")) {
 					char** args = cmd_get(commands[i]);
@@ -85,7 +85,7 @@ void pipe_commands(CMD** commands) {
 					return;
 				}
 
-				if(streq(commands[i]->command, "exit")) {
+				if(streq(commands[i]->command, "exit") || streq(commands[i]->command, "eggzit")) {
 					exit(0);
 				}
 
