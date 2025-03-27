@@ -6,6 +6,6 @@
 "|"         { return PIPE; }
 \n          { return EOL; }
 [ \t]       { /* ignore whitespace*/ }
-[^ \t\n|]  { yylval.str = strdup(yytext); return WORD; }
+[^ \t\n|]+  { yylval.str = strdup(yytext); return WORD; }
 
 %%

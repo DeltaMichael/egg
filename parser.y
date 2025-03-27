@@ -2,6 +2,7 @@
     #include <stdio.h>
     #include <string.h>
     #include <stdlib.h>
+	#include "interpreter.h"
 %}
 
 %union {
@@ -15,12 +16,15 @@
 
 %type <str> command sequence
 
-%destructor { free($$); } WORD
-
 %%
 
 seqlist:
-       | seqlist sequence EOL { printf("%s\n", $2); free($2); }
+       | seqlist sequence EOL {
+	   							printf("%s\n", $2);
+	   							char* current_dir = get_current_dir();
+								printf("(%s (EGG> ", current_dir);
+								free($2);
+							  }
        ;
 
 sequence: sequence PIPE command { strcat($1, " PIPE "); strcat($1, $3); $$ = $1; free($3); }
@@ -34,8 +38,10 @@ command: command WORD { $$ = strcat($1, $2); free($2); }
 %%
 
 int main(int argc, char** argv) {
+	system("clear");
+	char* current_dir = get_current_dir();
+	printf("(%s (EGG> ", current_dir);
     yyparse();
-    yylex_destroy();  // Clean up lexer resources
     return 0;
 }
 
