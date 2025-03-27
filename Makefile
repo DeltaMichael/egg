@@ -10,6 +10,11 @@ hmap.o: hmap.h
 util.o: util.h sbuilder.h arglist.h
 arglist.o: arglist.h
 
+parser: scanner.l parser.y
+	bison -d parser.y
+	flex scanner.l
+	cc $(FLAGS) -o parser parser.tab.c lex.yy.c -lfl
+
 .PHONY: clean
 clean:
 	rm $(O_FILES)
