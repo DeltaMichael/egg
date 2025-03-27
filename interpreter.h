@@ -10,7 +10,7 @@ char* find_executable(char* name);
 char* get_file_type(struct dirent *c_entry);
 void list_dir_contents(char* path);
 void execute_bin(char* name, char** args);
-void pipe_commands(COMMAND** commands, int size);
+void pipe_commands(CMD** commands);
 DIR* open_dir(char* current_dir);
 void change_dir(char* new_dir);
 #endif

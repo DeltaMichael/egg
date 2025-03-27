@@ -126,7 +126,16 @@ void execute_bin(char* name, char** args) {
 	}
 }
 
-void pipe_commands(COMMAND** commands, int size) {
+void pipe_commands(CMD** commands) {
+
+	// TODO: replace this with appropriate data structure
+	int size = 0;
+	CMD** cmd_pointer = commands;
+	while(*cmd_pointer != NULL) {
+		size++;
+		cmd_pointer++;
+	}
+
 	int fds[2 * (size - 1)];
 	for(int i = 0; i < size - 1; i++) {
 		if (-1 == pipe(fds + 2 * i)) {
@@ -149,8 +158,8 @@ void pipe_commands(COMMAND** commands, int size) {
 	}
 
 	for(int i = 0; i < size; i++) {
-
-		char* executable = find_executable(commands[i]->command);
+		char** args = cmd_get(commands[i]);
+		char* executable = find_executable(args[0]);
 		if(streq("", executable)) {
 			continue;
 		}
@@ -175,7 +184,7 @@ void pipe_commands(COMMAND** commands, int size) {
 			for(int j = 0; j < 2 * (size - 1); j++) {
 				close(fds[j]);
 			}
-			execv(executable, commands[i]->args);
+			execv(executable, args);
 			exit(EXIT_SUCCESS);
 		}
 	}

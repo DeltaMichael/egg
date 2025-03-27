@@ -150,7 +150,7 @@ void pipe_commands(COMMAND** commands, int size) {
 
 	for(int i = 0; i < size; i++) {
 
-		char* executable = find_executable(commands[i]->command);
+		char* executable = find_executable(commands[i]->args);
 		if(streq("", executable)) {
 			continue;
 		}

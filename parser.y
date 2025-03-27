@@ -25,15 +25,7 @@
 seqlist:
        | seqlist sequence EOL {
 	   							CMD** seq = $2;
-								while(*seq != NULL) {
-									char** args = cmd_get(*seq);
-									while(*args != NULL) {
-										printf("%s ", *args);
-										args++;
-									}
-									printf("\n");
-									seq++;
-								}
+								pipe_commands(seq);
 	   							char* current_dir = get_current_dir();
 								printf("(%s (EGG> ", current_dir);
 							  }
